@@ -1,0 +1,395 @@
+================== Archivos JSON========================
+Son archivos de almacenamiento que tiene un formato JSON
+son documentos 
+{
+    claver: valor
+    registro1: valor
+}
+
+================== Comandos ============================
+#Generales
+Para iniciar el servidor es con mongo
+para parar el servicio es net stop MongoDB
+Para correr el servicio es mongod --dbpath "C:\Program Files\MongoDB\Server\5.0\data"
+show dbs
+db.namedb.find().pretty()
+
+#Create
+db.namedb.insertOne(data, options)  #Ejemplo insertOne( {}, {}... )
+db.namedb.insertMany(data, options) #Ejemplo insertMany( [] )
+ 
+#Update
+updateOne(filter, data, opt #Ejemplo updateOne({nombre:"Juan"}, { $set: {marcador:"borarr"}})
+updateMany(filter, data, options) #Ejemplo updateMany({}, { $set: {marcador:"borarr"}}
+replaceOne(filter, data, options) sin set #Ejemplo db.usuariosDatos.replaceOne({ _id : ObjectId("6199031a6f6cd9f971f6676c") },  {alta:false}, {     "nombre": "Felipe",     "apellidos": "Sanchez",     "edad": 27,     "alta": false,     "dirección":     {        "ciudad": "Madrid"     }   })
+update(filter, data) sin set solo agrega un campo 
+                #Ejemplo db.usuariosDatos.update({ _id : ObjectId("6199031a6f6cd9f971f6676c") },  {alta:false} )
+
+#Read
+db.namedb.find() #Ejemplo db.usuariosDatos.find( {edad: 25}).pretty()
+                 #Ejemplo con operardo greater than db.usuariosDatos.find( {edad: {$gt:24 }}).pretty()
+db.namedb.findOne(filter, options) #Ejemplo devuelve el primero en buscar db.usuariosDatos.findOne( {edad: {$gt:24 }})
+
+#Delete
+deleteOne(filter, options) #Ejemplo deleteOne({marcador:"borrar"})
+deleteMany(filter, options)
+
+
+================== Operaciones CRUD ====================
+Create= Crear
+Read= Leer
+Update= Actualizar
+Delete= Borrar
+
+Casos de usos
+Aplicacion, Analitica/ BI, Administracion 
+
+
+================== Operadores reservados para guardar ============================
+$set: 
+
+================== Operadores reservados para encontrar ============================
+$gt: 
+
+===================== Proyeccion Find() =========================================
+Devuelve un objeto cursor de los 20 primeros
+Para devolver todos los objetos, convertir en un array
+#Ejemplo db.nombres.find().toArray()
+O con la funcion ForEach()
+#Ejemplo db.nombres.find().forEach((nombres) => {printjson(nombres)})
+
+========================= Documentos inscrutrados  =========================
+Son documentos con sub documentos hasta 100 niveles
+Hasta 16mb por Documentes
+un documento puede tener una matriz 
+#Ejemplo
+ db.nombres.updateMany( {}, { $set: {estado:{descripcion: "activo", actualizado: "hace 1 hora"} } })
+ db.nombres.updateMany( {}, { $set: {estado:{descripcion: "activo", actualizado: "hace 1 hora", detalles:{detalle:"Fichado por Anthony"}} } })
+
+========================= Matrices ======================================
+Se puede tener Matrices o listas en un documentos y viseverza 
+#Ejemplo 
+db.nombres.updateOne({nombre:"Ricky Martin"}, {$set: {aficiones: ["cantar", "bailar", "presentar"]}} )
+
+==================== Acceso a datos  estructurados =================
+Para buscar un docmento dentro de otro
+db.nombres.findOne({nombre:"Ricky Martin"}).aficiones
+Para buscar dentro del documento incrustado es
+#Sub documento 2 niveles
+db.nombres.findOne({"estado.descripcion": "activo"})
+#Dentro del SubDocumento 3 niveles 
+db.nombres.findOne({"estado.detalles.detalle": "Fichado por Anthony"})
+
+
+=================== Borrar base de datos ================================
+Para colecciones
+db.nombrecoleccion.drop()
+Para base de datos
+use nombrebasedatos
+db.dropDatabase()
+
+===================== Schemas =======================================
+Structura de documentos
+MongoDB usa dos tipos, de sin schema o schema predifinido
+#Sin Schema (No fija)
+Chaos documentos con campos distintos 
+
+#Con Schema intermedia (MediaFija)
+Aceptable los documentos con campos similares exepto una o mas, es decir strictamente no tiene la misma estructurados
+
+#Con Schema (Fija)
+SQL  Los documentos tienen los mismos campos y tiene una misma Structura
+
+============= Tipos de datos =============================
+texto
+boolean
+numero: int, int64, decimal
+ObjectId
+fecha: isodate, timestamp
+documento incrustado {}
+array matriz []
+tipo de datos grandes con decimal
+sb.stats()    para ver metadatos
+typeof para ver el tipo de datos
+NumberInt()
+NumberDecimal()
+NumberInt64()
+
+
+======================= Relaciones ========================
+Tipos de Relacionar datos: 
+Documentos incrustados: {..,..,,,{}} una solo coleccion
+Referencias:  { .., ..:[]} dos colecciones
+
+
+1.Relacion de uno a uno
+
+Paciente <=> Historial medico 
+#Ejemplo 1 
+FIJA referencias con dos colecciones
+db.pacientes.insertOne({nombre:"Juan", edad:25, historial:"historial1"})
+db.historial.insertOne({_id:"historial1", enfermedades:["brazo roto", "gripe"]})
+var his=db.pacientes.findOne({nombre:"Juan"}).historial
+db.historial.findOne({_id:his})
+db.historial.findOne({_id:his}).enfermedades
+
+#Ejemplo 2
+FIJA documentos incrustados con una sola coleccion
+db.pacientes.insertOne({nombre:"Juan", edad:25, historial:{ enfermedades:["brazo roto","gripe"]}})
+db.pacientes.findOne({nombre: "Juan"}).historial.enfermedades
+
+Persona <=> Coche
+#Ejemplo 3
+FIJA referencias con dos colecciones
+db.personas.insertOne({nombre:"Juan", edad:25, sueldo:2000, coche:"coche1" } })
+db.coche.insertOne({_id:"coche1", modelo:"Toyota", precio:30000})
+var coche=db.personas.findOne({nombre:"Juan"}).coche
+db.coche.findOne({_id:coche})
+
+Relacion de uno a muchos
+Referencia
+Preguntas <=> Respuestas
+#Ejemplo 4
+use preguntasyrespuestas
+db.pregunta.insertOne({nombre:"Juan", pregunta:"Como funciona esto?", respuestas:["p1r1", "p2r2"]})
+db.respuesta.insertOne([{_id:"p1r1", texto:"Funciona asi"},{_id:"p1r2", texto:"Gracias!"}])
+
+#Ejemplo 5
+incrustado
+db.pregunta.insertOne({nombre:"Juan", pregunta:"Como funciona esto?", respuestas:[{texto:"Funciona asi"}, {texto:"Gracias!"}]})
+
+
+Ciudad <=> Ciudadano conviene referencia porque son muchos datos
+#Ejemplo 6
+Referencia
+use ciudades
+db.ciudad.insertOne({nombre: "Esmerldas", poblacion:10250})
+
+
+Relacion de muchos a muchos
+incrustado 3 tablas
+#Ejemplo 7
+Cliente <=> Producto
+use tienda 
+db.productos.insertOne({titulo: "un libro", precio: 9.99})
+db.clientes.insertOne({nombre: "Juan", edad: 25})
+db.pedidos.insertOne({idProducto: ObjectId("61995fe473b8a2ba56d314be"), idCliente: ObjectId("6199602073b8a2ba56d314bf") })
+
+Incrustado pero relacionado dos tablas
+db.clientes.updateOne({}, {$set:{ pedidos:[ {idProducto:ObjectId("61995fe473b8a2ba56d314be"), cantidad:3 } ]} })
+
+Incrustado sin relacionar pero se redundan datos
+db.clientes.updateOne({}, {$set:{ pedidos: {titulo:"Un libro",precio:9.99, cantidad:3 } } })
+
+
+
+Relacion de muchos a muchos
+referencia
+
+Incrutado sin referencia
+#Ejemplo 8
+Libro <=> Autor
+db.libro.insertOne({nombre:"Un libro", autores:[{nombre:"Juan", edad:25}, {nombre:"Sebastian", edad:30}] })
+
+Incrustado con referencia
+db.libro.updateOne({}, {$set: {nombre:"Un libro", autores:[ ObjectId("6199687f73b8a2ba56d314c2"), ObjectId("6199687f73b8a2ba56d314c3")] } })
+
+
+====================== Resumen =========================
+Tipo de Relaciones (depende de la apliacion, captura de datos al momento, limite, )
+1. Documentos estructurados: agrupar de forma logica, datos (juntos, poco niveles, no largos),  relaciones de 1 a 1 y 1 a muchos
+2. Referencias: Distribuir varias colecciones, si tienes muchos duplicados,  si son datos enormes usarlos
+
+
+
+
+======================= Operaciones CRUD ====================
+#Crear
+insert()
+insertOne()
+insertMany()
+#Orden
+{ordered:true}
+
+#Leer metodos, filtros y Operadores
+$gt
+$set
+
+
+
+================= Importar archivo JSON =====================
+asegurar se encuentre en la ruta del archivo desde cmd, y arrancar con
+mongoimport colores.json -d dbcolores -c colores --jsonArray --drop
+
+
+================= find dbempleados======================
+db.empleados.find({"Salario anual":49000}).pretty()
+
+================ operadores de comparacion ==============
+#Operados $eq igual a 
+db.empleados.find({"Salario anual":{$eq:49000}}) 
+
+#Operados $ne no igual a
+db.empleados.find({"Salario anual":{$ne:49000}}) 
+
+#Operados $gt mayor igual a 
+db.empleados.find({"Salario anual":{$gt:49000}}) 
+
+#Operados $lt menor que  
+db.empleados.find({"Salario anual":{$lt:49000}}) 
+
+#Operados $lt menor que  o igual
+db.empleados.find({"Salario anual":{$lte:49000}}) 
+
+#Operados $in compara una lista que este 
+db.empleados.find({"Salario anual":{$in:[48000,49000]}}) 
+
+#Operados $nin compara que no este en una lista
+db.empleados.find({"Salario anual":{$nin:[48000,49000]}}) 
+
+====================== operadores logicos ==================
+$and 
+ db.empleados.find({ $and: [{"Salario anual":48500}, {Oficina:4}]}).pretty()
+
+$not # se utiliza con otro operador
+db.empleados.find({ "Salario anual":{$not: {$eq:48500}}}).count()
+$nor
+db.empleados.find({ $nor: [{"Salario anual":48000}, {Oficina:4}]}).pretty()
+$or
+db.empleados.find({ $or: [{"Salario anual":48000}, {Oficina:4}]}).pretty()
+
+
+================== operadores de elemento ===================
+#Ejemplo se inserta dos empleados uno con salario y otro sin salario, luego se busca con exit el de sin salario ydevuelve el mismo.
+db.empleados.insertOne( { "EmpID" : 99, "Apellido" : "Pineda", "Nombre" : "Jose", "Categoría" : "Comercial", "Fecha contrato" : "5/10/03", "Oficina" : 2, "Extension" : "501", "Informes a" : 4, "Salario anual":"45000" })
+db.empleados.insertOne( { "EmpID" : 18, "Apellido" : "Pineda", "Nombre" : "Juan", "Categoría" : "Comercial", "Fecha contrato" : "5/10/03", "Oficina" : 2, "Extension" : "501", "Informes a" : 4, })
+db.empleados.find({EmpID: {$in: [98,99]}}).pretty()
+
+
+$exists #si existe un campo
+# No existe
+db.empleados.find({"Salario anual": {$exists:false}}).pretty()
+# Si existe
+db.empleados.find({"Salario anual": {$exists:true}}).pretty() 
+
+#Devuelve los item con el typo de dato especificado: como int, float, long etc
+$type 
+db.empleados.find({"Salario anual": {$type:"number"}}).pretty()
+db.empleados.find({"Salario anual": {$type:"string"}}).pretty()
+
+# numeros mayores a 40000
+db.empleados.find({"Salario anual": {$type:"number", $gt:44000}}).pretty()
+
+
+====================== Operadores de evaluacion ===================
+$regex devuelve la coicidencia de una exprecion regular
+db.empleados.find({"Categoría": {$regex: /Jefe/}}).pretty()
+
+$expr compara dos campos definidos en listas y haciendo uso de otro operador
+db.ventas.find({$expr: { $gt: ["$ventas", "$objetivo"]}}).pretty()
+
+#Ejemplo si las ventas son mayor que el objetivo,
+pero si las ventas son menor que 100,
+traer las que ventas que superaron en 20 al objetivo
+db.ventas.find({$expr: { $gt: [{$cond: { if:  {$lt: ["$ventas", 100]}, then: {$subtract: ["$ventas", 20]}, else: "$ventas"}}, "$objetivo" ]}}).pretty()
+
+
+======================= Trabajo con matrices =========================
+ #Busqueda exacta
+ db.usuarios.find({ direccion: {ciudad: "Barcelona"}})
+ # Busqueda total
+ db.usuarios.find({ "direccion.ciudad": "Barcelona"})  
+
+ #$size devuleve objeto que contiene el numero de elementos indicados de una matriz
+ db.usuarios.find({aficiones: {$size:3}}).pretty()
+
+ #all escoge todos los elementos sin impórtar el nombre
+ db.usuarios.find({aficiones: {$all:["correr", "nadar"]}}).pretty()
+
+#and con muchos 
+db.usuarios.find( {$and: [ { "notas.mates":{$gt:85} }, { "notas.ingles":{$gt:80} }] }).pretty()
+
+# cuando es matriz solo busca un objeto 
+ $elemMatch 
+ db.usuarios.find( {notas: {$elemMatch: { mates:{$gt:85}, ingles:{$gt:80} } }}).pretty()
+
+
+ ================ find() y el cursor =========================
+ const objetoCursor = db.empleados.find()
+ objetoCursor.next()
+ objetoCursor.hasNext()
+
+
+
+ ======================= sort para ordenar===================
+
+ db.empleados.find().sort({"EmID":1}),pretty() ascendente
+db.empleados.find().sort({"Oficina":1,"EmID":1}).pretty()
+
+
+========================= skip() y limit() ===================
+db.empleados.find().sort({"Oficina":1,"EmID":1}).skip(10).pretty()
+db.empleados.find().sort({"Oficina":1,"EmID":1}).limit(2).pretty()
+
+
+======================= proyeccion ========================
+# Que datos vamos a proyectar osea mostrar solo los campos especificados
+db.empleados.find({}, {Nombre:1, "Salario anual":1, _id:0 } )
+
+================== proyeccion sobre matrices ==============
+#solo el campo elegido con .$
+db.usuarios.find({aficiones: "correr"}, {"aficiones.$":1}).pretty()
+
+#todos 
+db.usuarios.find({aficiones: "correr"}, {aficiones:1}).pretty()
+
+
+====================== operador slice ================
+Corta la busque en una matriz
+db.usuarios.find({nombre:"David"}, {aficiones: {$slice:1}} ).pretty()
+si quiero saltarme un elemento en con el primo de los corchetes y el segundo numero muestra los elementos [1,1]
+db.usuarios.find({nombre:"David"}, {aficiones: {$slice:[2,1]}} ).pretty()
+
+
+=================== update updateOne(), updateMany()
+db.usuarios.updateMany({nombre: {$in: ["David", "Alfonso"]}}, {$set: { notas: [{año:1,mates:0, ingles:0}] }})
+
+
+
+============== Operadores update ====================
+$inc
+db.usuarios.updateOne({nombre: "Alfonso"}, {$inc: {edad:20}})
+
+$min, $max, $mul # los modifica si tiene el valor especificado anteriormente
+db.usuarios.updateOne({nombre: "Alfonso"}, {$max: {edad:20}})
+
+
+$unset #para eliminar un campo
+db.usuarios.updateOne({nombre: "Alfonso"}, {$unset: {notas:""}})
+
+
+$rename
+db.usuarios.updateOne({nombre: "Alfonso"}, {$rename: {nombre:"Nombre_Usuario"}})
+
+upsert para updateOne
+db.usuarios.updateOne({Nombre_Usuario: "Anthony"}, {$set: {notas:[{año:1, mates:0, ingles:0}]}}, {upsert:true})
+
+============================= deleteOne deleteMany ===============
+db.usuarios.deleteMany({ Nombre_Usuario: {$in: ["Maria", "Anthony"] }})
+
+db.namedb.deleteMany({})
+db.namedb.drop()
+db.dropDatabase()
+
+
+
+======================= framework agregacion =====================
+$match  similar a find()
+db.personas.aggregate([ {$match: {gender:"female"}}]).pretty()
+
+
+#Agrupacion group
+db.personas.aggregate([
+    {$match: {gender:"female"}},//Escoge los documento
+    {$group: {_id: {ciudad:"$location.city"}, personas:{$sum:1} }} //escoge el capo por agrupar
+]).pretty()
